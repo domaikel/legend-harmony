@@ -3,7 +3,6 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type LegendMode = "variable-version" | "variable" | "version";
@@ -44,89 +43,6 @@ export const ChartLegendHarmonizer = () => {
       variable: item.variable,
       version: item.version,
     }));
-
-    // Generate legend items based on mode
-    const legendItems = (() => {
-      switch (legendMode) {
-        case "variable":
-          const variableGroups = sampleData.reduce((acc, item) => {
-            if (!acc[item.variable]) {
-              acc[item.variable] = [];
-            }
-            acc[item.variable].push(item);
-            return acc;
-          }, {} as Record<string, DataPoint[]>);
-
-          return Object.entries(variableGroups).map(([variable, items]) => ({
-            name: variable,
-            symbolWidth: 24,
-            labelFormatter: function() {
-              return `<span style="display: flex; align-items: center; gap: 8px;">
-                <span style="display: flex; gap: 2px;">
-                  ${items.map(item => `<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; border: 1px solid hsl(var(--border));"></span>`).join('')}
-                </span>
-                <span style="color: hsl(var(--foreground)); font-weight: 500;">${variable}</span>
-              </span>`;
-            },
-            useHTML: true,
-            events: {
-              mouseOver: function() {
-                // Show tooltip with versions
-                const versions = items.map(item => `${item.version}: ${item.value}`).join('<br>');
-                this.chart.tooltip.refresh([{
-                  series: { name: variable },
-                  point: { name: versions }
-                }]);
-              }
-            }
-          }));
-
-        case "version":
-          const versionGroups = sampleData.reduce((acc, item) => {
-            if (!acc[item.version]) {
-              acc[item.version] = [];
-            }
-            acc[item.version].push(item);
-            return acc;
-          }, {} as Record<string, DataPoint[]>);
-
-          return Object.entries(versionGroups).map(([version, items]) => ({
-            name: version,
-            symbolWidth: 24,
-            labelFormatter: function() {
-              return `<span style="display: flex; align-items: center; gap: 8px;">
-                <span style="display: flex; gap: 2px;">
-                  ${items.map(item => `<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; border: 1px solid hsl(var(--border));"></span>`).join('')}
-                </span>
-                <span style="color: hsl(var(--foreground)); font-weight: 500;">${version}</span>
-              </span>`;
-            },
-            useHTML: true,
-            events: {
-              mouseOver: function() {
-                const variables = items.map(item => `${item.variable}: ${item.value}`).join('<br>');
-                this.chart.tooltip.refresh([{
-                  series: { name: version },
-                  point: { name: variables }
-                }]);
-              }
-            }
-          }));
-
-        default: // variable-version
-          return series.map(item => ({
-            name: item.name,
-            symbolWidth: 16,
-            labelFormatter: function() {
-              return `<span style="display: flex; align-items: center; gap: 8px;">
-                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${item.color}; border: 1px solid hsl(var(--border));"></span>
-                <span style="color: hsl(var(--foreground)); font-weight: 500;">${item.name}</span>
-              </span>`;
-            },
-            useHTML: true
-          }));
-      }
-    })();
 
     return {
       chart: {
@@ -172,42 +88,7 @@ export const ChartLegendHarmonizer = () => {
         gridLineColor: "hsl(var(--chart-grid))",
       },
       legend: {
-        enabled: true,
-        align: 'right',
-        verticalAlign: 'top',
-        layout: 'vertical',
-        x: -20,
-        y: 50,
-        floating: true,
-        backgroundColor: 'hsl(var(--background))',
-        borderColor: 'hsl(var(--border))',
-        borderWidth: 1,
-        borderRadius: 8,
-        shadow: {
-          color: 'hsl(var(--shadow))',
-          opacity: 0.1,
-          width: 3,
-          offsetX: 2,
-          offsetY: 2
-        },
-        itemStyle: {
-          color: 'hsl(var(--foreground))',
-          fontWeight: '500',
-          fontSize: '12px'
-        },
-        itemHoverStyle: {
-          color: 'hsl(var(--primary))'
-        },
-        symbolHeight: 8,
-        symbolWidth: 8,
-        symbolRadius: 4,
-        itemMarginTop: 4,
-        itemMarginBottom: 4,
-        padding: 12,
-        labelFormatter: function() {
-          // This will be overridden by custom legend items
-          return this.name;
-        }
+        enabled: false,
       },
       plotOptions: {
         column: {
@@ -279,18 +160,18 @@ export const ChartLegendHarmonizer = () => {
     if (colors.length === 1) {
       return (
         <div 
-          className="w-3 h-3 rounded-sm border border-border" 
+          className="w-2.5 h-2.5 rounded-full border border-border" 
           style={{ backgroundColor: colors[0] }}
         />
       );
     }
 
     return (
-      <div className="flex gap-0.5">
+      <div className="flex items-center gap-1">
         {colors.map((color, index) => (
           <div
             key={index}
-            className="w-2 h-3 border border-border first:rounded-l-sm last:rounded-r-sm"
+            className="w-2.5 h-2.5 rounded-full border border-border"
             style={{ backgroundColor: color }}
           />
         ))}
@@ -333,12 +214,63 @@ export const ChartLegendHarmonizer = () => {
         </div>
       </div>
 
-      <Card className="p-4">
+      <Card className="p-4 relative">
         <HighchartsReact
           highcharts={Highcharts}
           options={chartData}
           containerProps={{ style: { height: "500px" } }}
         />
+
+        {/* Legend overlay inside chart area */}
+        <div className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto flex flex-wrap items-center gap-4 bg-background/80 backdrop-blur-sm border border-border rounded-full px-3 py-2 shadow-sm">
+            <TooltipProvider>
+              {legendItems.map((item) => {
+                const detailItems = legendMode === "variable"
+                  ? sampleData.filter(d => d.variable === item.label)
+                  : legendMode === "version"
+                    ? sampleData.filter(d => d.version === item.label)
+                    : sampleData.filter(d => `${d.variable} • ${d.version}` === item.label);
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors"
+                      >
+                        <ColorSwatch colors={item.colors} />
+                        <span className="font-medium">{item.label}</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center">
+                      <div className="text-xs space-y-1">
+                        {legendMode !== "variable-version" ? (
+                          detailItems.map((d, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span
+                                className="inline-block w-2.5 h-2.5 rounded-full border border-border"
+                                style={{ backgroundColor: d.color }}
+                              />
+                              <span>{d.variable} • {d.version}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-block w-2.5 h-2.5 rounded-full border border-border"
+                              style={{ backgroundColor: detailItems[0]?.color }}
+                            />
+                            <span>{item.label}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </TooltipProvider>
+          </div>
+        </div>
       </Card>
 
       <Card className="p-4 mt-4">
