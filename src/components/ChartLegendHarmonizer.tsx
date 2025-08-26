@@ -23,20 +23,23 @@ interface LegendItem {
   seriesIds: string[];
 }
 
+// More realistic financial data
 const sampleData: DataPoint[] = [
-  { variable: "EBITDA", version: "Actuals", value: 1200, color: "#3b82f6" },
-  { variable: "EBITDA", version: "Forecast", value: 1350, color: "#22c55e" },
-  { variable: "Revenue", version: "Actuals", value: 5000, color: "#f97316" },
-  { variable: "Revenue", version: "Forecast", value: 5500, color: "#8b5cf6" },
-  { variable: "OpEx", version: "Actuals", value: -800, color: "#ef4444" },
-  { variable: "OpEx", version: "Forecast", value: -750, color: "#f59e0b" },
+  { variable: "Actuals", version: "Q1 2024", value: 1200, color: "#3b82f6" },
+  { variable: "Actuals", version: "Q2 2024", value: 1350, color: "#3b82f6" },
+  { variable: "Actuals", version: "Q3 2024", value: 1180, color: "#3b82f6" },
+  { variable: "Actuals", version: "Q4 2024", value: 1420, color: "#3b82f6" },
+  { variable: "Plan 2024", version: "Q1 2024", value: 1100, color: "#8b5cf6" },
+  { variable: "Plan 2024", version: "Q2 2024", value: 1250, color: "#8b5cf6" },
+  { variable: "Plan 2024", version: "Q3 2024", value: 1300, color: "#8b5cf6" },
+  { variable: "Plan 2024", version: "Q4 2024", value: 1400, color: "#8b5cf6" },
 ];
 
 export const ChartLegendHarmonizer = () => {
-  const [legendMode, setLegendMode] = useState<LegendMode>("variable-version");
+  const [selectedMode, setSelectedMode] = useState<LegendMode>("variable");
 
-  const chartData = useMemo(() => {
-    const series = sampleData.map((item, index) => ({
+  const createChartOptions = (mode: LegendMode, data: DataPoint[]) => {
+    const series = data.map((item, index) => ({
       id: `${item.variable}-${item.version}-${index}`,
       name: `${item.variable} • ${item.version}`,
       data: [item.value],
@@ -49,56 +52,70 @@ export const ChartLegendHarmonizer = () => {
       chart: {
         type: "column",
         backgroundColor: "hsl(var(--chart-background))",
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
+        height: 300,
+        spacing: [20, 20, 20, 20],
         style: {
           fontFamily: "inherit",
         },
       },
       title: {
-        text: "Chart Legend Harmonizer",
+        text: "Deduplicate legend items - TEST 2",
         style: {
           color: "hsl(var(--foreground))",
-          fontSize: "18px",
-          fontWeight: "600",
+          fontSize: "14px",
+          fontWeight: "500",
         },
+        align: "left",
+        margin: 25,
       },
       xAxis: {
-        categories: ["Q4 2024"],
+        categories: ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"],
         labels: {
           style: {
             color: "hsl(var(--muted-foreground))",
+            fontSize: "11px",
           },
         },
         lineColor: "hsl(var(--border))",
         tickColor: "hsl(var(--border))",
+        gridLineWidth: 0,
       },
       yAxis: {
         title: {
-          text: "Value (in millions)",
-          style: {
-            color: "hsl(var(--muted-foreground))",
-          },
+          text: null,
         },
         labels: {
           style: {
             color: "hsl(var(--muted-foreground))",
+            fontSize: "11px",
           },
         },
         gridLineColor: "hsl(var(--chart-grid))",
+        gridLineWidth: 1,
+        min: 0,
+        max: 1600,
       },
       legend: {
-        enabled: false, // We'll create our own custom legend
+        enabled: true,
+        align: "center",
+        verticalAlign: "bottom",
+        itemStyle: {
+          color: "hsl(var(--foreground))",
+          fontSize: "12px",
+          fontWeight: "400",
+        },
+        symbolHeight: 8,
+        symbolWidth: 8,
+        symbolRadius: 4,
+        itemMarginBottom: 5,
       },
       plotOptions: {
         column: {
+          groupPadding: 0.1,
+          pointPadding: 0.05,
+          borderWidth: 0,
           dataLabels: {
-            enabled: true,
-            style: {
-              color: "hsl(var(--foreground))",
-              fontWeight: "500",
-            },
+            enabled: false,
           },
         },
       },
@@ -106,11 +123,19 @@ export const ChartLegendHarmonizer = () => {
       credits: {
         enabled: false,
       },
+      tooltip: {
+        backgroundColor: "hsl(var(--popover))",
+        borderColor: "hsl(var(--border))",
+        style: {
+          color: "hsl(var(--popover-foreground))",
+          fontSize: "12px",
+        },
+      },
     };
-  }, []);
+  };
 
   const legendItems = useMemo((): LegendItem[] => {
-    switch (legendMode) {
+    switch (selectedMode) {
       case "variable":
         const variableGroups = sampleData.reduce((acc, item) => {
           if (!acc[item.variable]) {
@@ -123,8 +148,8 @@ export const ChartLegendHarmonizer = () => {
         return Object.entries(variableGroups).map(([variable, items]) => ({
           id: variable,
           label: variable,
-          colors: items.map(item => item.color),
-          tooltip: items.map(item => `${item.variable} • ${item.version}`).join(", "),
+          colors: [items[0].color], // Single color per variable
+          tooltip: `Add variable icon - ${variable}`,
           seriesIds: items.map((item, index) => `${item.variable}-${item.version}-${sampleData.indexOf(item)}`),
         }));
 
@@ -141,7 +166,7 @@ export const ChartLegendHarmonizer = () => {
           id: version,
           label: version,
           colors: items.map(item => item.color),
-          tooltip: items.map(item => `${item.variable} • ${item.version}`).join(", "),
+          tooltip: `Add version icon - ${version}`,
           seriesIds: items.map((item, index) => `${item.variable}-${item.version}-${sampleData.indexOf(item)}`),
         }));
 
@@ -155,13 +180,13 @@ export const ChartLegendHarmonizer = () => {
           seriesIds: [`${item.variable}-${item.version}-${index}`],
         }));
     }
-  }, [legendMode]);
+  }, [selectedMode]);
 
   const ColorSwatch = ({ colors }: { colors: string[] }) => {
     if (colors.length === 1) {
       return (
         <div 
-          className="w-3 h-3 rounded-sm border border-border" 
+          className="w-2 h-2 rounded-full border border-border/50" 
           style={{ backgroundColor: colors[0] }}
         />
       );
@@ -172,7 +197,7 @@ export const ChartLegendHarmonizer = () => {
         {colors.map((color, index) => (
           <div
             key={index}
-            className="w-2 h-3 border border-border first:rounded-l-sm last:rounded-r-sm"
+            className="w-1.5 h-2 border border-border/50 first:rounded-l-sm last:rounded-r-sm"
             style={{ backgroundColor: color }}
           />
         ))}
@@ -180,100 +205,143 @@ export const ChartLegendHarmonizer = () => {
     );
   };
 
+  const AnnotationBox = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+    <div className={`bg-yellow-100 border border-yellow-300 rounded px-2 py-1 text-xs font-medium text-yellow-800 ${className}`}>
+      {children}
+    </div>
+  );
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Chart Legend Harmonizer</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold text-foreground">Chart Legend Harmonizer</h1>
+          <p className="text-muted-foreground">
             Eliminate duplicate legend items across Variables and Versions
           </p>
+          
+          <div className="flex justify-center gap-2">
+            <Button
+              variant={selectedMode === "variable" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedMode("variable")}
+            >
+              Variable
+            </Button>
+            <Button
+              variant={selectedMode === "version" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedMode("version")}
+            >
+              Version
+            </Button>
+            <Button
+              variant={selectedMode === "variable-version" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedMode("variable-version")}
+            >
+              Variable & Version
+            </Button>
+          </div>
         </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={legendMode === "variable-version" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLegendMode("variable-version")}
-          >
-            Variable & Version
-          </Button>
-          <Button
-            variant={legendMode === "variable" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLegendMode("variable")}
-          >
-            Variable
-          </Button>
-          <Button
-            variant={legendMode === "version" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLegendMode("version")}
-          >
-            Version
-          </Button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card className="p-4">
+        {/* Chart Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Variable Mode */}
+          <div className="relative">
+            <AnnotationBox className="absolute top-4 left-4 z-10">
+              Legend content: Variable
+            </AnnotationBox>
+            <Card className="p-4 bg-white">
+              <HighchartsReact
+                highcharts={Highcharts}
+                options={createChartOptions("variable", sampleData)}
+              />
+            </Card>
+            {selectedMode === "variable" && (
+              <div className="absolute top-1/2 right-4 z-10">
+                <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg">
+                  Add variable icon
+                  <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Version Mode */}
+          <div className="relative">
+            <AnnotationBox className="absolute top-4 left-4 z-10">
+              Legend content: Version
+            </AnnotationBox>
+            <Card className="p-4 bg-white">
+              <HighchartsReact
+                highcharts={Highcharts}
+                options={createChartOptions("version", sampleData)}
+              />
+            </Card>
+            {selectedMode === "version" && (
+              <div className="absolute top-1/2 right-4 z-10">
+                <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg">
+                  Add version icon
+                  <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Variable & Version Mode - Full Width */}
+        <div className="relative">
+          <AnnotationBox className="absolute top-4 left-4 z-10">
+            Legend content: Variable & Version
+          </AnnotationBox>
+          <Card className="p-4 bg-white">
             <HighchartsReact
               highcharts={Highcharts}
-              options={chartData}
-              containerProps={{ style: { height: "400px" } }}
+              options={createChartOptions("variable-version", sampleData)}
+              containerProps={{ style: { height: "350px" } }}
             />
           </Card>
+          {selectedMode === "variable-version" && (
+            <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
+              <AnnotationBox>
+                Status quo
+              </AnnotationBox>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-4">
-          <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-3">
-              Legend ({legendMode.replace("-", " & ")})
-            </h3>
-            <div className="space-y-2">
-              <TooltipProvider>
-                {legendItems.map((item) => (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-3 p-2 rounded-md hover:bg-legend-hover cursor-pointer transition-colors">
-                        <ColorSwatch colors={item.colors} />
-                        <span className="text-sm font-medium text-foreground flex-1">
-                          {item.label}
-                        </span>
-                        {item.colors.length > 1 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {item.colors.length}
-                          </Badge>
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="left" align="center">
-                      <div className="text-xs">
-                        {item.tooltip}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </TooltipProvider>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-3">Mode Details</h3>
-            <div className="text-sm text-muted-foreground space-y-2">
-              {legendMode === "variable" && (
-                <p>Each variable appears once with all version colors shown as composite swatches.</p>
-              )}
-              {legendMode === "version" && (
-                <p>Each version appears once with all variable colors shown as composite swatches.</p>
-              )}
-              {legendMode === "variable-version" && (
-                <p>Each Variable-Version combination shows as a separate item with its assigned color.</p>
-              )}
-            </div>
-          </Card>
-        </div>
+        {/* Legend Details */}
+        <Card className="p-6 bg-white">
+          <h3 className="font-semibold text-foreground mb-4">
+            Current Legend Mode: {selectedMode.replace("-", " & ").toUpperCase()}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <TooltipProvider>
+              {legendItems.map((item) => (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-legend-hover cursor-pointer transition-colors">
+                      <ColorSwatch colors={item.colors} />
+                      <span className="text-sm font-medium text-foreground flex-1">
+                        {item.label}
+                      </span>
+                      {item.colors.length > 1 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {item.colors.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">{item.tooltip}</div>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </div>
+        </Card>
       </div>
     </div>
   );
