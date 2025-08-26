@@ -61,7 +61,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				chart: {
+					blue: 'hsl(var(--chart-blue))',
+					green: 'hsl(var(--chart-green))',
+					orange: 'hsl(var(--chart-orange))',
+					purple: 'hsl(var(--chart-purple))',
+					red: 'hsl(var(--chart-red))',
+					yellow: 'hsl(var(--chart-yellow))',
+					teal: 'hsl(var(--chart-teal))',
+					pink: 'hsl(var(--chart-pink))',
+					grid: 'hsl(var(--chart-grid))',
+					background: 'hsl(var(--chart-background))'
+				},
+				'legend-hover': 'hsl(var(--legend-hover))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
